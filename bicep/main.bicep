@@ -21,7 +21,7 @@ var tags = {
 }
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: 'st${take(replace(name, '-', ''), 20)}'
+  name: 'st${uniqueString(resourceGroup().id)}'
   location: location
   tags: tags
   kind: 'StorageV2'

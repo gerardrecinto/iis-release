@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.49.2.45890",
-      "templateHash": "16573117342659114813"
+      "templateHash": "13236299276639168265"
     }
   },
   "parameters": {
@@ -59,7 +59,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2023-05-01",
-      "name": "[format('st{0}', take(replace(variables('name'), '-', ''), 20))]",
+      "name": "[format('st{0}', uniqueString(resourceGroup().id))]",
       "location": "[parameters('location')]",
       "tags": "[variables('tags')]",
       "kind": "StorageV2",
@@ -179,7 +179,7 @@
           "appSettings": [
             {
               "name": "AzureWebJobsStorage__accountName",
-              "value": "[format('st{0}', take(replace(variables('name'), '-', ''), 20))]"
+              "value": "[format('st{0}', uniqueString(resourceGroup().id))]"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -194,7 +194,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', format('plan-{0}', variables('name')))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}', take(replace(variables('name'), '-', ''), 20)))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}', uniqueString(resourceGroup().id)))]"
       ]
     },
     {
