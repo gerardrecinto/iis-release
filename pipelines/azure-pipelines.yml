@@ -1,0 +1,41 @@
+# Azure DevOps pipeline. Parsed and structure-checked in CI (scripts/check_pipeline.py).
+# Not run on an Azure DevOps organization: it needs self-hosted Windows agents and environments.
+trigger:
+  branches:
+    include: [main]
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Package
+        steps:
+          - pwsh: Invoke-Pester -Path tests/IisRelease.Tests.ps1 -CI
+            displayName: Unit tests
+          - pwsh: |
+              New-Item -ItemType Directory -Path $(Build.ArtifactStagingDirectory)/site -Force | Out-Null
+              Compress-Archive -Path examples/app/* -DestinationPath $(Build.ArtifactStagingDirectory)/site/site.zip
+              Copy-Item -Recurse src/IisRelease $(Build.ArtifactStagingDirectory)/site/
+            displayName: Package
+          - publish: $(Build.ArtifactStagingDirectory)/site
+            artifact: site
+
+  - template: templates/deploy-iis.yml
+    parameters:
+      environment: dev
+      serviceConnection: azure-dev
+      dependsOn: [Build]
+
+  - template: templates/deploy-iis.yml
+    parameters:
+      environment: staging
+      serviceConnection: azure-staging
+      dependsOn: [Deploy_dev]
+
+  - template: templates/deploy-iis.yml
+    parameters:
+      environment: prod
+      serviceConnection: azure-prod
+      dependsOn: [Deploy_staging]

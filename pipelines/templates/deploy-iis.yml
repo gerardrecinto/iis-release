@@ -1,0 +1,36 @@
+# Reusable deploy stage. One template, three environments, same steps every time.
+parameters:
+  - name: environment
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: dependsOn
+    type: object
+    default: []
+
+stages:
+  - stage: Deploy_${{ parameters.environment }}
+    displayName: Deploy to ${{ parameters.environment }}
+    dependsOn: ${{ parameters.dependsOn }}
+    jobs:
+      - deployment: iis
+        displayName: Publish release to IIS
+        environment: ${{ parameters.environment }}   # approvals and checks live on the environment
+        pool:
+          name: iis-${{ parameters.environment }}      # self-hosted Windows agent with IIS
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: site
+                - task: PowerShell@2
+                  displayName: Publish and health check (rolls back on failure)
+                  inputs:
+                    targetType: inline
+                    pwsh: true
+                    script: |
+                      Import-Module "$(Pipeline.Workspace)/site/IisRelease/IisRelease.psm1" -Force
+                      Publish-IisRelease -SiteName "$(SiteName)" -AppPoolName "$(AppPoolName)" `
+                        -PackagePath "$(Pipeline.Workspace)/site/site.zip" `
+                        -ReleaseRoot "$(ReleaseRoot)" -HealthUrl "$(HealthUrl)"
