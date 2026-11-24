@@ -30,8 +30,11 @@ function Test-IisHealth {
         [int]$DelaySeconds = 2
     )
     for ($i = 1; $i -le $Retries; $i++) {
+        # A unique query string keeps the IIS kernel cache (http.sys) from answering with the previous release's page.
+        $sep = if ($Url -match '\?') { '&' } else { '?' }
+        $probe = "$Url${sep}_probe=$([guid]::NewGuid().ToString('N'))"
         try {
-            $r = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5
+            $r = Invoke-WebRequest -Uri $probe -UseBasicParsing -TimeoutSec 5 -Headers @{ 'Cache-Control' = 'no-cache' }
             if ($r.StatusCode -eq 200) { return $true }
         }
         catch {
