@@ -60,7 +60,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 50px;color:var(--mute);fo
   </nav>
 
   <header class="hero">
-    <span class="tag">PowerShell · IIS · Azure DevOps · Terraform</span>
+    <span class="tag">PowerShell · IIS · Azure DevOps · Bicep · ARM · Terraform</span>
     <h1>Ship a zip to IIS.<br><span>Roll back if it is not healthy.</span></h1>
     <p class="lead">A small PowerShell module that deploys a release, checks a health URL, and puts the previous version back on failure. Tested on a real IIS server in CI, not only with mocks.</p>
     <div class="cta">
@@ -96,7 +96,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 50px;color:var(--mute);fo
       <div class="card"><div class="ok">Real IIS</div><h3>Deploy, then a bad build</h3><p>Windows runner installs IIS, deploys v1 and v2, then pushes a build with no health page. The deploy must fail and v2 must keep serving.</p></div>
       <div class="card"><div class="ok">Unit tests</div><h3>Pester on Linux</h3><p>Switch on healthy, roll back on unhealthy, retry count, missing package, and pruning that never deletes the live folder.</p></div>
       <div class="card"><div class="ok">Pipeline</div><h3>Dev, staging, prod</h3><p>The Azure DevOps pipeline uses one deploy template three times, each stage depending on the last, each tied to an environment for approvals.</p></div>
-      <div class="card"><div class="ok">Terraform</div><h3>Format, validate, scan</h3><p>Azure and AWS roots are checked with fmt and validate, then scanned with Trivy for high and critical findings.</p></div>
+      <div class="card"><div class="ok">Terraform</div><h3>Format, validate, scan</h3><p>Azure and AWS roots are checked with fmt and validate, then scanned with Trivy. The Bicep is linted and its ARM template must match the source.</p></div>
     </div>
   </section>
 
@@ -122,6 +122,7 @@ Publish-IisRelease -SiteName MySite -AppPoolName MyPool `
       <tr><td>Windows web app (runs IIS) with health check path</td><td><code>terraform/azure</code></td><td><span class="pill g">validated, scanned</span></td></tr>
       <tr><td>Function App, Service Bus queue, Storage, API Management</td><td><code>terraform/azure</code></td><td><span class="pill g">validated, scanned</span></td></tr>
       <tr><td>Managed identity roles on the queue, no connection strings</td><td><code>terraform/azure</code></td><td><span class="pill g">validated, scanned</span></td></tr>
+      <tr><td>Same Azure platform in Bicep, compiled to an ARM template that CI keeps in sync</td><td><code>bicep/</code></td><td><span class="pill g">linted, in sync</span></td></tr>
       <tr><td>Encrypted, versioned artifact bucket</td><td><code>terraform/aws</code></td><td><span class="pill g">validated, scanned</span></td></tr>
       <tr><td>Multi-stage Azure DevOps pipeline and template</td><td><code>pipelines/</code></td><td><span class="pill y">structure checked, not run</span></td></tr>
     </table>

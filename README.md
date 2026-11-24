@@ -11,6 +11,7 @@ Site: https://gerardrecinto.github.io/iis-release-lab/
 | Pester unit tests (Linux) | Switch on healthy, rollback on unhealthy, retries, missing package, pruning |
 | Real IIS (Windows runner) | Installs IIS, deploys v1 then v2, then a bad build that must be rejected while v2 keeps serving |
 | Pipeline check | Azure DevOps pipeline has dev, staging and prod in order, each depending on the last |
+| Bicep and ARM | `bicep lint` is clean and `bicep/main.json` (the ARM template) matches the Bicep source |
 | Terraform | `fmt`, `validate` and a Trivy scan on the Azure and AWS roots |
 
 ## Try it
@@ -34,7 +35,7 @@ Publish-IisRelease -SiteName MySite -AppPoolName MyPool `
 ## What is not proven
 
 - The Azure DevOps pipeline is parsed and structure-checked, not run. It needs self-hosted Windows agents and environments with approvals.
-- The Terraform is validated and scanned, never applied to a real subscription or account.
+- The Terraform and Bicep are validated and scanned or linted, never applied to a real subscription or account.
 - API Management, Function Apps and Service Bus are in the Azure Terraform only. No application code runs on them here.
 
 ## Layout
@@ -43,6 +44,7 @@ Publish-IisRelease -SiteName MySite -AppPoolName MyPool `
 src/IisRelease/        PowerShell module
 tests/                 Pester tests and the Windows integration test
 pipelines/             Azure DevOps pipeline and reusable deploy template
+bicep/                 Same Azure platform in Bicep, plus the compiled ARM template (main.json)
 terraform/azure/       Resource group, Windows web app (IIS), Function App, Service Bus, API Management, Storage
 terraform/aws/         Encrypted, versioned artifact bucket
 docs/                  GitHub Pages site

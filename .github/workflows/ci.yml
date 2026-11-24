@@ -37,6 +37,18 @@ jobs:
           python-version: '3.12'
       - run: pip install pyyaml && python scripts/check_pipeline.py
 
+  bicep:
+    name: Bicep lint and ARM template in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: az bicep install
+      - run: az bicep lint --file bicep/main.bicep
+      - name: ARM template matches the Bicep source
+        run: |
+          az bicep build --file bicep/main.bicep --outfile /tmp/main.json
+          diff -u bicep/main.json /tmp/main.json
+
   terraform:
     name: Terraform fmt, validate and scan
     runs-on: ubuntu-latest
