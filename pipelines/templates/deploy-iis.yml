@@ -28,7 +28,7 @@ stages:
                   displayName: Publish and health check (rolls back on failure)
                   inputs:
                     targetType: inline
-                    pwsh: true
+                    pwsh: false   # Windows PowerShell 5.1 on the IIS agent, same as the CI test
                     script: |
                       Import-Module "$(Pipeline.Workspace)/site/IisRelease/IisRelease.psm1" -Force
                       Publish-IisRelease -SiteName "$(SiteName)" -AppPoolName "$(AppPoolName)" `

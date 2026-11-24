@@ -24,7 +24,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - shell: pwsh
+      - shell: powershell
         run: ./tests/integration.ps1
 
   pipeline:
@@ -48,7 +48,7 @@ jobs:
           for d in azure aws; do
             (cd terraform/$d && terraform init -backend=false -input=false && terraform validate)
           done
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: terraform

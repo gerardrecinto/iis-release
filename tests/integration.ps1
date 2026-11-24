@@ -1,7 +1,8 @@
-# Real IIS test. Runs on a Windows runner: installs IIS, deploys v1, v2, then a bad build.
+# Real IIS test. Runs in Windows PowerShell 5.1 on a Windows runner: installs IIS, deploys v1, v2, then a bad build.
 # The bad build has no health.html, so the health check must fail and v2 must keep serving.
 $ErrorActionPreference = 'Stop'
-Import-Module (Join-Path $PSScriptRoot '..' 'src' 'IisRelease' 'IisRelease.psm1') -Force
+$module = Join-Path (Join-Path (Join-Path $PSScriptRoot '..') 'src') 'IisRelease\IisRelease.psm1'
+Import-Module $module -Force
 
 Install-WindowsFeature -Name Web-Server -IncludeManagementTools | Out-Null
 Import-Module WebAdministration
@@ -56,6 +57,12 @@ Assert-Equal $failed $true 'bad build rejected'
 Assert-Equal (Get-Body) 'version-2' 'site after rollback'
 Assert-Equal ($msg -like '*Rolled back*') $true 'error says rolled back'
 
-$summary = "### IIS release test on Windows`n`n| Check | Result |`n|---|---|`n" + ($results -join "`n")
+$snap = Get-HostSnapshot -SiteName 'lab' -AppPoolName 'lab'
+Assert-Equal $snap.SiteState 'Started' 'site state'
+Assert-Equal $snap.AppPoolState 'Started' 'app pool state'
+Assert-Equal (($snap.CpuPercent -ge 0) -and ($snap.MemoryFreePercent -gt 0) -and ($snap.DiskFreePercent -gt 0)) $true 'cpu, memory, disk readings are sane'
+
+$summary = "### IIS release test on Windows`n`n| Check | Result |`n|---|---|`n" + ($results -join "`n") + "`n`nHost snapshot: CPU $($snap.CpuPercent)%, memory free $($snap.MemoryFreePercent)%, disk free $($snap.DiskFreePercent)%, error events $($snap.RecentErrorEvents)"
+
 Write-Host $summary
 if ($env:GITHUB_STEP_SUMMARY) { Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary }

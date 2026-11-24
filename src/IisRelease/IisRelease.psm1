@@ -1,5 +1,7 @@
 Set-StrictMode -Version Latest
 
+if (Get-Module -ListAvailable -Name WebAdministration) { Import-Module WebAdministration }
+
 # Thin wrappers around the IIS cmdlets so tests can mock them on any OS.
 function Get-SitePath {
     param([Parameter(Mandatory)][string]$SiteName)
@@ -95,4 +97,35 @@ function Remove-OldRelease {
         Remove-Item -Recurse -Force
 }
 
-Export-ModuleMember -Function Publish-IisRelease, Test-IisHealth, Remove-OldRelease
+function Get-HostSnapshot {
+    <#
+    .SYNOPSIS
+    One-shot Windows host health: CPU, memory, disk, recent error events, and IIS site and pool state.
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$SiteName,
+        [string]$AppPoolName,
+        [string]$Drive = 'C',
+        [int]$EventMinutes = 15
+    )
+    $os = Get-CimInstance -ClassName Win32_OperatingSystem
+    $disk = Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DeviceID='${Drive}:'"
+    $cpu = (Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 2).CounterSamples |
+        Select-Object -Last 1 -ExpandProperty CookedValue
+    $since = (Get-Date).AddMinutes(-$EventMinutes)
+    $errors = @(Get-WinEvent -FilterHashtable @{ LogName = 'System', 'Application'; Level = 1, 2; StartTime = $since } -ErrorAction SilentlyContinue)
+    $snap = [ordered]@{
+        CpuPercent          = [math]::Round($cpu, 1)
+        MemoryFreePercent   = [math]::Round(100 * $os.FreePhysicalMemory / $os.TotalVisibleMemorySize, 1)
+        DiskFreePercent     = [math]::Round(100 * $disk.FreeSpace / $disk.Size, 1)
+        RecentErrorEvents   = $errors.Count
+        SiteState           = $null
+        AppPoolState        = $null
+    }
+    if ($SiteName) { $snap.SiteState = (Get-Website -Name $SiteName).State }
+    if ($AppPoolName) { $snap.AppPoolState = (Get-WebAppPoolState -Name $AppPoolName).Value }
+    [pscustomobject]$snap
+}
+
+Export-ModuleMember -Function Publish-IisRelease, Test-IisHealth, Remove-OldRelease, Get-HostSnapshot
