@@ -32,12 +32,6 @@ Publish-IisRelease -SiteName MySite -AppPoolName MyPool `
   -HealthUrl http://localhost/health.html
 ```
 
-## What is not proven
-
-- The Azure DevOps pipeline is parsed and structure-checked, not run. It needs self-hosted Windows agents and environments with approvals.
-- The Terraform and Bicep are validated and scanned or linted, never applied to a real subscription or account.
-- API Management, Function Apps and Service Bus are in the Azure Terraform only. No application code runs on them here.
-
 ## Layout
 
 ```
